@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<title>Residual Temporal Coupled Matrix Factorization for Financial Asset Recommendation</title>
+<!-- Copyright (c) 2010-2015 The MathJax Consortium --><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"></meta>
+<meta name="viewport" content="width=device-width; initial-scale=1.0;"></meta>
+<meta http-equiv="X-UA-Compatible" content="IE=edge"></meta>
+<link media="screen, print" rel="stylesheet"
+            href="https://dl.acm.org/pubs/lib/css/bootstrap.min.css"/><link media="screen, print" rel="stylesheet"
+            href="https://dl.acm.org/pubs/lib/css/bootstrap-theme.min.css"/><link media="screen, print" rel="stylesheet"
+            href="https://dl.acm.org/pubs/lib/css/main.css"/><script src="https://dl.acm.org/pubs/lib/js/jquery.min.js" type="text/javascript"></script>
+<script src="https://dl.acm.org/pubs/lib/js/bootstrap.min.js" type="text/javascript"></script>
+<script src="https://dl.acm.org/pubs/lib/js/bibCit.js" type="text/javascript"></script>
+<script src="https://dl.acm.org/pubs/lib/js/divTab.js" type="text/javascript"></script>
+<script type="text/javascript"
+              src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS_CHTML"></script>
+<script type="text/x-mathjax-config">MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});</script>
+</head>
+<body id="main">
+<main>
+<section class="front-matter">
+<section>
+<header class="title-info">
+<div class="journal-title">
+<h1>
+<span class="title">Residual Temporal Coupled Matrix Factorization for Financial Asset Recommendation</span>
+<br/>
+<span class="subTitle"/>
+</h1>
+</div>
+</header>
+<div class="authorGroup">
+<div class="author">
+<a href="https://orcid.org/0009-0007-7050-8642" ref="author"><span class="givenName">Youli</span> <span class="surName">Guo</span></a>
+<a class="cor" href="#afn1">&#x2217;</a>, 
+Boston University, Boston, USA, <a href="mailto:ylguo@bu.edu">ylguo@bu.edu</a>
+</div>
+</div>
+<br/>
+<div class="pubInfo">
+<p>DOI: <a href="https://doi.org/10.1145/3764727.3764747" target="_blank">https://doi.org/10.1145/3764727.3764747</a>
+<br/>AIDF 2025: <a href="https://doi.org/10.1145/3764727" target="_blank">2025 International Conference on Artificial Intelligence and Digital Finance</a>, Chengdu, China, June 2025</p>
+</div>
+<div class="abstract">
+<p><small>Financial asset recommendation faces critical challenges: evolving investor sentiment and market conditions, popularity bias against less-traded assets, and complex asset co-occurrence patterns, which lead to poor recommendation quality and insufficient coverage of investors&#x2019; needs. To address these issues, we propose residual temporal coupled matrix factorization (R-TCMF) that incorporates temporal regularization to capture temporal dynamics, coupled factorization leveraging normalized pointwise mutual information to model asset relationships, and residual factorization to counteract popularity bias. We then evaluate on the FAR-Trans, the first large-scale public financial transaction dataset. It shows that R-TCMF achieves 30.04% nDCG@10, 22.37% mAP@10, and 47.94% recall@10, representing improvements of 17.8%, 22.5%, and 12.9% respectively over the conventional approaches.</small></p>
+</div>
+<div class="CCSconcepts">
+<ccs2012><small> <span style="font-weight:bold;">CCS Concepts:</span> &#x2022; <strong>Information systems &#x2192; Collaborative filtering</strong>; &#x2022; <strong>Computing methodologies &#x2192; Factorization methods</strong>; &#x2022; <strong>Applied computing &#x2192; Economics</strong>; &#x2022; <strong>Mathematics of computing~Hypothesis testing and confidence interval computation;</strong> </small></ccs2012>
+</div>
+<br/>
+<div class="classifications">
+<div class="keyword">
+<span style="font-weight:bold;"><small>Keywords:</small></span>
+<span class="keyword"><small>Collaborative filtering</small>, </span>
+<span class="keyword"><small>Financial recommendation</small>, </span>
+<span class="keyword"><small>Popularity bias</small>, </span>
+<span class="keyword"><small>Retail investors</small>, </span>
+<span class="keyword"><small>Temporal matrix factorization</small></span>
+</div>
+<br/>
+<div class="AcmReferenceFormat">
+<p><small>
+<span style="font-weight:bold;">ACM Reference Format:</span>
+<br/>Youli Guo. 2025. Residual Temporal Coupled Matrix Factorization for Financial Asset Recommendation. In <em>2025 International Conference on Artificial Intelligence and Digital Finance AIDF 2025), June 27-29, 2025, Chengdu, China</em>. ACM, New York, NY, USA, 9 Pages. <a class="link-inline force-break" href="https://doi.org/10.1145/3764727.3764747">https://doi.org/10.1145/3764727.3764747</a></small></p>
+</div>
+</div>
+</section>
+</section>
+<section class="body">
+<section id="sec1">
+<header>
+<div class="title-info">
+<h2>
+<span class="section-number">1</span> Introduction</h2>
+</div>
+</header>
+<p>The proliferation of financial technology has transformed how the retail investors access and interact with investment opportunities [<a class="bib" data-trigger="hover" data-toggle="popover" data-placement="top" href="#bib1">1</a>]. Modern investment platforms offer access to hundreds of financial instruments, from traditional stocks and bonds to complex derivatives and alternative investments. However, this abundance of choice creates a paradox: while investors have unprecedented access to diverse assets, they often struggle to identify investments that align with their preferences, risk tolerance, and financial objectives [<a class="bib" data-trigger="hover" data-toggle="popover" data-placement="top" href="#bib2">2</a>]. This challenge has motivated the development of personalized financial asset recommender systems (RS) that can guide investors toward suitable investment opportunities.</p>
+<p>Financial asset RS requires capturing investor behavior patterns and suggesting relevant investment opportunities amid fluctuating market conditions. Classical collaborative filtering (CF) approaches&#x2014;such as user-item matrix factorization (MF)&#x2014;assume static preferences and often fail when preferences evolve or when item popularity skews recommendations toward frequently traded assets [<a class="bib" data-trigger="hover" data-toggle="popover" data-placement="top" href="#bib3">3</a>,<a class="bib" data-trigger="hover" data-toggle="popover" data-placement="top" href="#bib4">4</a>]. Some existing financial recommendation studies rely on synthetic or proprietary datasets, limiting real-world applicability and generalizability due to the absence of suitable dataset [<a class="bib" data-trigger="hover" data-toggle="popover" data-placement="top" href="#bib5">5</a>].</p>
+<p>To address these limitations, some researches have explored temporal extensions of MF. Koren&#x0027;s dynamic CF model incorporates time-dependent biases to track evolving preferences [<a class="bib" data-trigger="hover" data-toggle="popover" data-placement="top" href="#bib3">3</a>], while more recent temporal frameworks impose smoothness constraints on latent factors to handle sequential data [<a class="bib" data-trigger="hover" data-toggle="popover" data-placement="top" href="#bib4">4</a>,<a class="bib" data-trigger="hover" data-toggle="popover" data-placement="top" href="#bib6">6</a>]. However, these methods typically ignore inter-asset relationships&#x2014;critical in financial contexts where assets often co-move&#x2014;and do not explicitly correct for popularity bias, leading to recommendations dominated by frequently traded instruments [<a class="bib" data-trigger="hover" data-toggle="popover" data-placement="top" href="#bib7">7</a>,<a class="bib" data-trigger="hover" data-toggle="popover" data-placement="top" href="#bib8">8</a>].</p>
+<p>The release of FAR-Trans, a large-scale, real-world financial transaction dataset, provides new opportunities for evaluating recommendation models under realistic market dynamics [<a class="bib" data-trigger="hover" data-toggle="popover" data-placement="top" href="#bib9">9</a>]. The dataset is extremely sparse (1.65% density), exhibits severe popularity bias (top 12 assets dominating over 50% of transactions), and reflects dynamic investor behavior (e.g., over 50% of investors executed less than 3 trades over 5 years vs. 650 power users with more than 100 trades each, and trade volume surges during COVID-19 volatility). Transaction logs further reveal strong asset co-occurrence patterns (e.g., bank stocks and government bonds frequently co-held). Some previous financial recommenders built without FAR-Trans used basic CF on synthetic data&#x2014;omitting temporal coupling and asset co-occurrence modeling&#x2014;serving as limited baselines [<a class="bib" data-trigger="hover" data-toggle="popover" data-placement="top" href="#bib5">5</a>]. We leverage FAR-Trans to develop and evaluate R-TCMF, integrating temporal smoothness, nPMI-based coupling, and residual bias removal to better model real investor behavior. Through extensive simulations, we demonstrate the following main contributions: (1) a framework that simultaneously addresses temporal dynamics, asset relationships, and popularity bias in financial recommendation, (2) evaluation on the first large-scale real financial transaction dataset, and (3) significant performance improvements with 17.8%, 22.5%, and 12.9% gains over the baseline across 3 metrics: nDCG@10, mAP@10, and recall@10.</p>
+<p>The remainder of this paper is structured as follows. In Section 2, we review related work on collaborative filtering, temporal matrix factorization (TMF), and popularity&#x2014;bias mitigation in RS. Section 3 describes our methodology: Section 3.1 presents derive TMF from MF, Section 3.2 introduces temporal coupled matrix factorization (TCMF) that incorporates nPMI&#x2014;based asset coupling, and Section 3.3 explains how residual factorization is used to correct popularity bias, yielding R-TMF and R-TCMF. In Section 4, we further introduce the characteristics of FAR-Trans and outline our experimental evaluation: Section 4.1 details the temporal rolling&#x2014;window setup on the FAR-Trans dataset, and Section 4.2 lists the baselines, experimental protocols, and results. Finally, Section 5 concludes the paper and discusses possible directions for future works.</p>
+</section>
+<section id="sec2">
+<header>
+<div class="title-info">
+<h2>
+<span class="section-number">2</span> Related Works</h2>
+</div>
+</header>
+<p>Financial recommendation research has been historically constrained by limited data availability. Gonzales and Hargreaves [<a class="bib" data-trigger="hover" data-toggle="popover" data-placement="top" href="#bib5">5</a>] proposed a decision-support system using proprietary holdings and synthetic market data with basic CF and data-mining techniques, but lacked access to real transaction records. Asemi et al. [<a class="bib" data-trigger="hover" data-toggle="popover" data-placement="top" href="#bib2">2</a>] introduced an investment-type recommender combining investor profiles with expert feedback via ANFIS and neural networks, yet their evaluation depended on offline or simulated data rather than real transactions. Barreau and Carlier [<a class="bib" data-trigger="hover" data-toggle="popover" data-placement="top" href="#bib10">10</a>] applied history-augmented CF to financial products, but validation was limited to small proprietary datasets. Ghiye et al. [<a class="bib" data-trigger="hover" data-toggle="popover" data-placement="top" href="#bib11">11</a>] proposed time-decay functions for personalized CF in finance, improving over static CF but not addressing asset co-occurrence or popularity bias explicitly.</p>
+<p>Modeling temporal dynamics is critical when user preferences or item characteristics evolve. Koren&#x0027;s seminal work on time-aware CF introduced per-user and per-item temporal biases learned from historical ratings [<a class="bib" data-trigger="hover" data-toggle="popover" data-placement="top" href="#bib3">3</a>]. Yu et al. [<a class="bib" data-trigger="hover" data-toggle="popover" data-placement="top" href="#bib4">4</a>] extended MF by enforcing smooth temporal transitions on latent factors for high-dimensional time series, demonstrating strong performance in seasonal recommendation contexts. Tahmasbi et al. [<a class="bib" data-trigger="hover" data-toggle="popover" data-placement="top" href="#bib6">6</a>] incorporated social ties and temporal coupling into collective MF, though focusing on social rather than financial recommendation. Bhavana and Padmanabhan [<a class="bib" data-trigger="hover" data-toggle="popover" data-placement="top" href="#bib12">12</a>] proposed a polynomial formulation for TMF enabling efficient latent factor estimation, yet without considering item coupling. Zheng et al. [<a class="bib" data-trigger="hover" data-toggle="popover" data-placement="top" href="#bib13">13</a>] explored learning-to-rank for financial asset selection with temporal features, but without explicit factorization of co-occurrence patterns.</p>
+<p>Capturing asset relationships is crucial in financial contexts where co-purchase patterns reflect underlying economic connections. The use of nPMI to normalize co-occurrence has been advocated for collocation extraction in text [<a class="bib" data-trigger="hover" data-toggle="popover" data-placement="top" href="#bib14">14</a>], but most financial recommendation systems fail to leverage similar inter-asset dependencies. Pagliaro et al. [<a class="bib" data-trigger="hover" data-toggle="popover" data-placement="top" href="#bib15">15</a>] modeled investor behavior by analyzing financial advisor notes with machine learning, focusing on unstructured text rather than latent factor methods. Asemi et al. [<a class="bib" data-trigger="hover" data-toggle="popover" data-placement="top" href="#bib2">2</a>] combined investor profiles with expert annotations but did not factor in asset co-occurrence.</p>
+<p>Popularity bias&#x2014;the tendency to over-recommend frequently interacted items&#x2014;reduces exposure to niche or emerging assets [<a class="bib" data-trigger="hover" data-toggle="popover" data-placement="top" href="#bib7">7</a>,<a class="bib" data-trigger="hover" data-toggle="popover" data-placement="top" href="#bib16">16</a>]. Klimashevskaia et al. [<a class="bib" data-trigger="hover" data-toggle="popover" data-placement="top" href="#bib7">7</a>] surveyed methods to quantify and mitigate popularity bias, highlighting that simple popularity-based baselines can rival sophisticated models if bias is not addressed. Elahi et al. [<a class="bib" data-trigger="hover" data-toggle="popover" data-placement="top" href="#bib16">16</a>] empirically evaluated user- and item-level bias in CF, showing that residual or debiased approaches substantially improve long-tail coverage. Carnovalini et al. [<a class="bib" data-trigger="hover" data-toggle="popover" data-placement="top" href="#bib8">8</a>] analyzed fairness in long-tail recommendations, advocating for explicit correction terms. In financial settings, popularity bias is particularly problematic as large institutional assets dominate transaction logs, obscuring opportunities in less-traded securities.</p>
+</section>
+<section id="sec3">
+<header>
+<div class="title-info">
+<h2>
+<span class="section-number">3</span> Methodology</h2>
+</div>
+</header>
+<p>Our framework development follows a progression of increasing sophistication. We begin with the foundational MF approach and extend its temporality, then enhance it by incorporating asset relationships that pure temporal models miss, and finally address systematic biases that can distort the underlying patterns we seek to capture.</p>
+<section id="sec3Z1">
+<header>
+<div class="title-info">
+<h3>
+<span class="section-number">3.1</span> Temporal Matrix Factorization (TMF)</h3>
+</div>
+</header>
+<p>The classic low-rank MF framework seeks to approximate an observed interaction matrix <span class="inline-equation"><span class="tex">$R \in {\mathbb{R}}^{m \times n}$</span>
+</span> by the product of two lower-dimensional factors:
+<div class="table-responsive" id="eqn1">
+<div class="display-equation">
+<span class="tex mytex">\begin{equation}
+R \approx U{V}^ \top 
+\end{equation}</span>
+<br/>
+<span class="equation-number">(1)</span>
+</div>
+</div>where <span class="inline-equation"><span class="tex">$U \in {\mathbb{R}}^{m \times k}$</span>
+</span> and <span class="inline-equation"><span class="tex">$V \in {\mathbb{R}}^{n \times k}$</span>
+</span> encode the latent features of <span class="inline-equation"><span class="tex">$m$</span>
+</span> users and <span class="inline-equation"><span class="tex">$n$</span>
+</span> items; <span class="inline-equation"><span class="tex">$k \ll {\rm{min}}( {m,n} )$</span>
+</span> represents the chosen latent dimension; <span class="inline-equation"><span class="tex">${R}_{a,b} = 1$</span>
+</span> if user <span class="inline-equation"><span class="tex">$a$</span>
+</span> purchased item <span class="inline-equation"><span class="tex">$b$</span>
+</span> at least once, <span class="inline-equation"><span class="tex">$0$</span>
+</span> otherwise. The factor matrices <span class="inline-equation"><span class="tex">$U$</span>
+</span> and <span class="inline-equation"><span class="tex">$V$</span>
+</span> are optimized by minimizing a regularized squared-error loss over the set of observed entries <span class="inline-equation"><span class="tex">${\rm{\Omega }} \subseteq \{ {1, \ldots ,m} \} \times \{ {1, \ldots ,n} \}$</span>
+</span>:
+<div class="table-responsive" id="eqn2">
+<div class="display-equation">
+<span class="tex mytex">\begin{equation}
+\mathop {\min }\limits_{U,V} \mathop \sum \nolimits_{\left( {a,b} \right) \in {\rm{\Omega }}} {\left( {{R}_{ab} - {U}_aV_b^ \top } \right)}^2 + \lambda \left( {\left| {\left| U \right|} \right|_F^2 + \left| {\left| V \right|} \right|_F^2} \right)
+\end{equation}</span>
+<br/>
+<span class="equation-number">(2)</span>
+</div>
+</div>where <span class="inline-equation"><span class="tex">$\lambda &gt; 0$</span>
+</span> controls the regularization strength and <span class="inline-equation"><span class="tex">${| {| \cdot |} |}_F$</span>
+</span> denotes the Fresenius norm. This static model assumes temporal exchangeability that user preferences and item characteristics remain constant over time, which fails in financial applications where market conditions and investor sentiment evolve continuously, necessitating dynamic modeling approaches. Thus, we extend the classical framework with time-indexed factor matrices:
+<div class="table-responsive" id="eqn3">
+<div class="display-equation">
+<span class="tex mytex">\begin{equation}
+{R}^{\left( t \right)} \approx {U}^{\left( t \right)}{V}^{\left( t \right) \top },{\rm{\ \ \ }}t = 1,2, \ldots T
+\end{equation}</span>
+<br/>
+<span class="equation-number">(3)</span>
+</div>
+</div>
+</p>
+<p>Here, <span class="inline-equation"><span class="tex">${R}^{( t )} \in {\mathbb{R}}^{m \times n}$</span>
+</span> is the observation matrix at period <span class="inline-equation"><span class="tex">$t$</span>
+</span>, and <span class="inline-equation"><span class="tex">$( {{U}^{( t )},{V}^{( t )}} )$</span>
+</span> are the corresponding time-specific latent factor matrices. To prevent overfitting and enforce smooth temporal evolution across the time that mimics real evolving user preferences and item attributes in financial markets, we introduce temporal coupling penalties that constrain consecutive time steps:
+<div class="table-responsive" id="eqn4">
+<div class="display-equation">
+<span class="tex mytex">\begin{equation}
+\begin{array}{@{}*{1}{c}@{}} {\mathcal{L}_{TMF}^{\left( t \right)} = \mathop {\min }\limits_{U,V} \mathop \sum \nolimits_{\left( {a,b} \right) \in {\rm{\Omega }}} {{\left( {R_{ab}^{\left( t \right)} - U_a^{\left( t \right)}V_b^{\left( t \right) \top }} \right)}}^2 + \lambda \left( {\left| {\left| {{U}^{\left( t \right)}} \right|} \right|_F^2 + \left| {\left| {{V}^{\left( t \right)}} \right|} \right|_F^2} \right)}\\ { + \gamma \left( {\left| {\left| {{U}^{\left( t \right)} - {U}^{\left( {t - 1} \right)}} \right|} \right|_F^2 + \left| {\left| {{V}^{\left( t \right)} - {V}^{\left( {t - 1} \right)}} \right|} \right|_F^2} \right)} \end{array}
+\end{equation}</span>
+<br/>
+<span class="equation-number">(4)</span>
+</div>
+</div>where <span class="inline-equation"><span class="tex">$\gamma &gt; 0$</span>
+</span> balances temporal smoothness versus model fit for <span class="inline-equation"><span class="tex">$t &gt; 1$</span>
+</span>, and <span class="inline-equation"><span class="tex">$\gamma = 0$</span>
+</span> for the initial period <span class="inline-equation"><span class="tex">$t = 1$</span>
+</span>. We drive the optimization gradients for efficient parameter updates for any user <span class="inline-equation"><span class="tex">$p$</span>
+</span> or any item <span class="inline-equation"><span class="tex">$q$</span>
+</span> from the observed interactions:
+<div class="table-responsive" id="eqn5">
+<div class="display-equation">
+<span class="tex mytex">\begin{equation}
+\frac{{\partial \mathcal{L}_{TMF}^{\left( t \right)}}}{{\partial U_p^{\left( t \right)}}} = 2\left[ {\left( {\lambda + \gamma } \right)U_p^{\left( t \right)} - \mathop \sum \nolimits_{b|\left( {p,b} \right) \in {\rm{\Omega }}} \left( {R_{pb}^{\left( t \right)} - U_p^{\left( t \right)}V_b^{\left( t \right) \top }} \right)V_b^{\left( t \right)} - \gamma U_p^{\left( {t - 1} \right)}} \right]
+\end{equation}</span>
+<br/>
+<span class="equation-number">(5)</span>
+</div>
+</div>
+<div class="table-responsive" id="eqn6">
+<div class="display-equation">
+<span class="tex mytex">\begin{equation}
+\frac{{\partial \mathcal{L}_{TMF}^{\left( t \right)}}}{{\partial V_q^{\left( t \right)}}} = 2\left[ {\left( {\lambda + \gamma } \right)V_q^{\left( t \right)} - \mathop \sum \nolimits_{a|\left( {a,q} \right) \in {\rm{\Omega }}} \left( {R_{aq}^{\left( t \right)} - U_a^{\left( t \right)}V_q^{\left( t \right) \top }} \right)U_a^{\left( t \right)} - \gamma V_q^{\left( {t - 1} \right)}} \right]
+\end{equation}</span>
+<br/>
+<span class="equation-number">(6)</span>
+</div>
+</div>
+</p>
+</section>
+<section id="sec3Z2">
+<header>
+<div class="title-info">
+<h3>
+<span class="section-number">3.2</span> Temporal Coupled Matrix Factorization (TCMF)</h3>
+</div>
+</header>
+<p>We introduce item coupling through co-occurrence matrices. Let <span class="inline-equation"><span class="tex">${C}^{( t )} \in {\mathbb{R}}^{n \times n}$</span>
+</span> be the pointwise information (nPMI) matrices. Let <span class="inline-equation"><span class="tex">${C}^{( t )} \in {\mathbb{R}}^{n \times n}$</span>
+</span> be the co-occurrence matrix defined as:
+<div class="table-responsive" id="eqn7">
+<div class="display-equation">
+<span class="tex mytex">\begin{equation}
+C_{ij}^{\left( t \right)} = nPMI\left( {ite{m}_i,ite{m}_j|window{\rm{\ }}t} \right) = \frac{{\log \left( {\frac{{p_{i,j}^{\left( t \right)}}}{{p_i^{\left( t \right)}p_j^{\left( t \right)}}}} \right)}}{{ - \log \left( {p_{ij}^{\left( t \right)}} \right)}}
+\end{equation}</span>
+<br/>
+<span class="equation-number">(7)</span>
+</div>
+</div>where <span class="inline-equation"><span class="tex">$p_{i,j}^{( t )}$</span>
+</span> is the probability that items <span class="inline-equation"><span class="tex">$i$</span>
+</span> and <span class="inline-equation"><span class="tex">$j$</span>
+</span> co-occur in the same user transaction record during period <span class="inline-equation"><span class="tex">$t$</span>
+</span> and <span class="inline-equation"><span class="tex">$( {p_i^{( t )},p_j^{( t )}} )$</span>
+</span> are their marginal probabilities. nPMI is chosen because its normalization to [&#x2013;1,&#x202F;1] yields comparable association scores that are well-suited for gradient-based optimization, avoiding the numerical instability that can arise from unbounded mutual information values. Moreover, while cosine similarity captures vector relationships effectively, nPMI&#x0027;s probabilistic foundation directly quantifies whether two assets co-occur more frequently than would be expected by chance. This probabilistic grounding helps distinguish genuine co-investment patterns (such as defensive assets clustering during market stress) from random noise. We couple the factorizations by sharing item factors:
+<div class="table-responsive" id="eqn8">
+<div class="display-equation">
+<span class="tex mytex">\begin{equation}
+{R}^{\left( t \right)} \approx {U}^{\left( t \right)}{V}^{\left( t \right) \top },C\left( t \right) \approx {V}^{\left( t \right)}{V}^{\left( t \right) \top },{\rm{\ \ \ }}t = 1,2, \ldots T
+\end{equation}</span>
+<br/>
+<span class="equation-number">(8)</span>
+</div>
+</div>
+</p>
+<p>This coupling ensures that learned item representations capture user preferences and inter-item relationships simultaneously. The joint optimization problem becomes:
+<div class="table-responsive" id="eqn9">
+<div class="display-equation">
+<span class="tex mytex">\begin{equation}
+\begin{array}{@{}*{1}{c}@{}} {\mathcal{L}_{TCMF}^{\left( t \right)} = \mathop {\min }\limits_{U,V} \left[ {\mathop \sum \nolimits_{\left( {a,b} \right) \in {{\rm{\Omega }}}^{\left( t \right)}} {{\left( {R_{ab}^{\left( t \right)} - U_a^{\left( t \right)}V_b^{\left( t \right) \top }} \right)}}^2 + \alpha \mathop \sum \nolimits_{\left( {i,j} \right) \in {{\rm{\Psi }}}^{\left( t \right)}} {{\left( {C_{ij}^{\left( t \right)} - V_i^{\left( t \right)}V_j^{\left( t \right) \top }} \right)}}^2} \right]}\\ { + \lambda \left( {\left| {\left| {{U}^{\left( t \right)}} \right|} \right|_F^2 + \left| {\left| {{V}^{\left( t \right)}} \right|} \right|_F^2} \right) + \gamma \left( {\left| {\left| {{U}^{\left( t \right)} - {U}^{\left( {t - 1} \right)}} \right|} \right|_F^2 + \left| {\left| {{V}^{\left( t \right)} - {V}^{\left( {t - 1} \right)}} \right|} \right|_F^2} \right)} \end{array}
+\end{equation}</span>
+<br/>
+<span class="equation-number">(9)</span>
+</div>
+</div>where <span class="inline-equation"><span class="tex">$\alpha $</span>
+</span> is the coupling weight and <span class="inline-equation"><span class="tex">${{\rm{\Psi }}}^{( t )}$</span>
+</span> denotes the set of observed co-occurrence entries in period <span class="inline-equation"><span class="tex">$t$</span>
+</span>. The gradient descent for <span class="inline-equation"><span class="tex">${V}^{( t )}$</span>
+</span> incorporates both interaction and co-occurrence terms:
+<div class="table-responsive" id="eqn10">
+<div class="display-equation">
+<span class="tex mytex">\begin{equation}
+\frac{{\partial \mathcal{L}_{TCMF}^{\left( t \right)}}}{{\partial V_q^{\left( t \right)}}} = \frac{{\partial \mathcal{L}_{TMF}^{\left( t \right)}}}{{\partial V_q^{\left( t \right)}}} - 4\alpha \mathop \sum \nolimits_{j|\left( {q,j} \right) \in {{\rm{\Psi }}}^{\left( t \right)}} \left( {C_{qj}^{\left( t \right)} - V_q^{\left( t \right)}V_j^{\left( t \right) \top }} \right)V_j^{\left( t \right)}
+\end{equation}</span>
+<br/>
+<span class="equation-number">(10)</span>
+</div>
+</div>
+</p>
+</section>
+<section id="sec3Z3">
+<header>
+<div class="title-info">
+<h3>
+<span class="section-number">3.3</span> Residual Factorization</h3>
+</div>
+</header>
+<p>To isolate genuine personalized preferences from systematic popularity bias, we consider two approaches.</p>
+<section id="sec3Z3Z1">
+<p><em><span class="section-number">3.3.1</span> Approach 1: Pre-computed Residuals.</em> Define the popularity as the normalized transaction frequency:
+<div class="table-responsive" id="eqn11">
+<div class="display-equation">
+<span class="tex mytex">\begin{equation}
+Pop_i^{\left( t \right)} = \frac{{total{\rm{\ }}interactions{\rm{\ }}of{\rm{\ }}item{\rm{\ }}i{\rm{\ }}in{\rm{\ }}period{\rm{\ }}t}}{{total{\rm{\ }}interactions{\rm{\ }}in{\rm{\ }}period{\rm{\ }}t}}
+\end{equation}</span>
+<br/>
+<span class="equation-number">(11)</span>
+</div>
+</div>
+</p>
+<p>We then subtract popularities, employ the residual factorization, and add them back during prediction:
+<div class="table-responsive" id="eqn12">
+<div class="display-equation">
+<span class="tex mytex">\begin{equation}
+{\tilde{R}}^{\left( t \right)} \approx {R}^{\left( t \right)} - {1}_mPo{p}^{\left( t \right)}
+\end{equation}</span>
+<br/>
+<span class="equation-number">(12)</span>
+</div>
+</div>where <span class="inline-equation"><span class="tex">$Po{p}^{( t )}$</span>
+</span> is a row vector contains popularities of all items in <span class="inline-equation"><span class="tex">$t$</span>
+</span> and <span class="inline-equation"><span class="tex">${1}_{\boldsymbol{m}}$</span>
+</span> is an <span class="inline-equation"><span class="tex">$m$</span>
+</span>-dimentional vector of ones, creating a popularity-adjusted interaction matrix for factorization. This method is implemented on TMF and TCMF, leading to R-TMF and R-TCMF models.</p>
+</section>
+<section id="sec3Z3Z2">
+<p><em><span class="section-number">3.3.2</span> Approach 2: Learnable Popularity (TimeSVD++ style).</em> We let the model learn popularity jointly with latent factors:
+<div class="table-responsive" id="eqn13">
+<div class="display-equation">
+<span class="tex mytex">\begin{equation}
+{R}^{\left( t \right)} \approx {U}^{\left( t \right)}{V}^{\left( t \right) \top } + {1}_mPo{p}^{\left( t \right)}
+\end{equation}</span>
+<br/>
+<span class="equation-number">(13)</span>
+</div>
+</div>
+</p>
+<p>The optimization problem for Approach 2:
+<div class="table-responsive" id="eqn14">
+<div class="display-equation">
+<span class="tex mytex">\begin{equation}
+\begin{array}{@{}*{1}{c}@{}} {\mathcal{L}_{SVD + + }^{\left( t \right)} = \mathop {\min }\limits_{U,V} \mathop \sum \nolimits_{\left( {a,b} \right) \in {{\rm{\Omega }}}^{\left( t \right)}} {{\left[ {R_{ab}^{\left( t \right)} - \left( {U_a^{\left( t \right)}V_b^{\left( t \right) \top } + Pop_b^{\left( t \right)}} \right)} \right]}}^2 + \lambda \left( {\left| {\left| {{U}^{\left( t \right)}} \right|} \right|_F^2 + \left| {\left| {{V}^{\left( t \right)}} \right|} \right|_F^2 + {{\left| {\left| {Po{p}^{\left( t \right)}} \right|} \right|}}^2} \right)}\\ { + \gamma \left( {\left| {\left| {{U}^{\left( t \right)} - {U}^{\left( {t - 1} \right)}} \right|} \right|_F^2 + \left| {\left| {{V}^{\left( t \right)} - {V}^{\left( {t - 1} \right)}} \right|} \right|_F^2 + \left| {\left| {Po{p}^{\left( t \right)} - Po{p}^{\left( {t - 1} \right)}} \right|} \right|_F^2} \right)} \end{array}
+\end{equation}</span>
+<br/>
+<span class="equation-number">(14)</span>
+</div>
+</div>
+</p>
+</section>
+</section>
+<section id="sec3Z4">
+<header>
+<div class="title-info">
+<h3>
+<span class="section-number">3.4</span> Algorithm and Theoretical Analysis</h3>
+</div>
+</header>
+<p>We present our general framework in Algorithm <a class="sec" href="#stmalgo1">1</a>, where <span class="inline-equation"><span class="tex">$\delta $</span>
+</span> denotes the learning rate, <span class="inline-equation"><span class="tex">${H}^{( t )}$</span>
+</span> is the binary mask of observed entries in <span class="inline-equation"><span class="tex">${R}^{( t )}$</span>
+</span>, <span class="inline-equation"><span class="tex">${G}^{( t )}$</span>
+</span> is the binary mask of observed entries in <span class="inline-equation"><span class="tex">${C}^{( t )}$</span>
+</span>, <span class="inline-equation"><span class="tex">${M}^{( t )}$</span>
+</span> is the binary mask vector for observed users, <span class="inline-equation"><span class="tex">${N}^{( t )}$</span>
+</span> is the binary mask vector for observed items.</p>
+<div class="table-responsive" id="stmalgo1">
+<div class="algorithm">
+<span class="algorithm-caption"><strong>ALGORITHM 1:</strong> Unified Temporal Factorization Framework</span>
+<div class="algitem"><strong>Input</strong>: <span class="inline-equation"><span class="tex">${R}^{( t )}$</span>
+</span> (replace with <span class="inline-equation"><span class="tex">${\tilde{R}}^{( t )}$</span>
+</span> if using R-TMF or R-TCMF), <span class="inline-equation"><span class="tex">${H}^{( t )}$</span>
+</span>, <span class="inline-equation"><span class="tex">${M}^{( t )}$</span>
+</span>, <span class="inline-equation"><span class="tex">${N}^{( t )}$</span>
+</span>, <span class="inline-equation"><span class="tex">$\delta $</span>
+</span>, <span class="inline-equation"><span class="tex">$\lambda $</span>
+</span>, <span class="inline-equation"><span class="tex">$\gamma $</span>
+</span>, <span class="inline-equation"><span class="tex">$\alpha $</span>
+</span>, <span class="inline-equation"><span class="tex">$( {{U}^{( {t - 1} )},{V}^{( {t - 1} )}} )$</span>
+</span> if <span class="inline-equation"><span class="tex">$t &gt; 1$</span>
+</span>, <span class="inline-equation"><span class="tex">${C}^{( t )}$</span>
+</span> if using TCMF or R-TCMF, <span class="inline-equation"><span class="tex">$Po{p}^{( t )}$</span>
+</span> if using TimeSVD++, <span class="inline-equation"><span class="tex">$Po{p}^{( {t - 1} )}$</span>
+</span> if <span class="inline-equation"><span class="tex">$t &gt; 1$</span>
+</span> and using TimeSVD++<br/><strong>Output</strong>: <span class="inline-equation"><span class="tex">${U}^{( t )},{V}^{( t )}$</span>
+</span>, and <span class="inline-equation"><span class="tex">$Po{p}^{( t )}$</span>
+</span> if using TimeSVD++<br/><strong>Initialize</strong>: <span class="inline-equation"><span class="tex">${U}^{( t )},{V}^{( t )}$</span>
+</span>, and <span class="inline-equation"><span class="tex">$Po{p}^{( t )}$</span>
+</span> if using TimeSVD++<br/><strong>repeat</strong><br/> &#x00A0;<span class="inline-equation"><span class="tex">$e \leftarrow ( {{R}^{( t )} - {U}^{( t )}{V}^{( t ) \top }} ) \odot {\rm{\ }}{H}^{( t )}$</span>
+</span>
+<br/> &#x2003;<strong>if</strong> TimeSVD++ is enabled <strong>then</strong><br/> &#x2003; &#x2003;
+<span class="inline-equation"><span class="tex">$e \leftarrow e - {1}_mPo{p}^{( t )} \odot {\rm{\ }}{H}^{( t )}$</span>
+</span>
+<br/> &#x2003; &#x2003;
+<span class="inline-equation"><span class="tex">$gp \leftarrow \lambda {V}^{( t )} - rowsum( e )$</span>
+</span>
+<br/> &#x2003;<strong>end if</strong><br/> &#x2003;
+<span class="inline-equation"><span class="tex">$gu \leftarrow \lambda {U}^{( t )} - e{V}^{( t )}$</span>
+</span>
+<br/> &#x2003;
+<span class="inline-equation"><span class="tex">$gv \leftarrow \lambda {V}^{( t )} - {e}^ \top {U}^{( t )}$</span>
+</span>
+<br/> &#x2003;<strong>if</strong> TCMF or R-TCMF is enabled <strong>then</strong><br/> &#x2003; &#x2003;
+<span class="inline-equation"><span class="tex">$r \leftarrow ( {{C}^{( t )} - {V}^{( t )}{V}^{( t ) \top }} ) \odot {\rm{\ }}{G}^{( t )}$</span>
+</span>
+<br/> &#x2003; &#x2003;
+<span class="inline-equation"><span class="tex">$gv \leftarrow gv - 2{\rm{\alpha }}r{V}^{( t )}$</span>
+</span>
+<br/> &#x2003;<strong>end if<br/> &#x2003;if</strong> t &gt; 1 <strong>then</strong><br/> &#x2003; &#x2003;
+<span class="inline-equation"><span class="tex">$gu \leftarrow gu + \gamma ( {{U}^{( t )} - {U}^{( {t - 1} )}} )$</span>
+</span>
+<br/> &#x2003; &#x2003;
+<span class="inline-equation"><span class="tex">$gv \leftarrow gv + \gamma ( {{V}^{( t )} - {V}^{( {t - 1} )}} )$</span>
+</span>
+<br/> &#x2003; &#x2003;<strong>if</strong> TimeSVD++ is enabled <strong>then</strong><br/> &#x2003; &#x2003; &#x2003;
+<span class="inline-equation"><span class="tex">$gp \leftarrow gp + \gamma ( {Po{p}^{( t )} - Po{p}^{( {t - 1} )}} )$</span>
+</span>
+<br/> &#x2003; &#x2003;<strong>end if &#x2003;<br/> &#x2003;end if</strong><br/> &#x2003;
+<span class="inline-equation"><span class="tex">${U}^{( t )} \leftarrow {U}^{( t )} - \delta ( {gu \odot {M}^{( t )}} )$</span>
+</span>
+<br/> &#x2003;
+<span class="inline-equation"><span class="tex">${V}^{( t )} \leftarrow {V}^{( t )} - \delta ( {gv \odot {N}^{( t )}} )$</span>
+</span>
+<br/> &#x2003;<strong>if</strong> TimeSVD++ is enabled <strong>then</strong><br/> &#x2003; &#x2003;
+<span class="inline-equation"><span class="tex">$Po{p}^{( t )} \leftarrow Po{p}^{( t )} - \delta ( {gp \odot {N}^{( t )}} )$</span>
+</span>
+<br/> &#x2003;<strong>end if &#x2003;<br/>until</strong> stopping criteria met<br/><strong>return</strong> &#x00A0;<span class="inline-equation"><span class="tex">${U}^{( t )},{V}^{( t )}$</span>
+</span> and <span class="inline-equation"><span class="tex">$Po{p}^{( t )}$</span>
+</span> if using TimeSVD++</div>
+</div>
+</div>
+<p>The optimization problems in our framework are all non-convex due to the bilinear terms in either user-item or item-item factorizations. However, we observe that the training loss decreases monotonically and stabilizes within 300 iterations across most time windows, indicating empirical convergence to local minima, probably because the temporal regularization terms act as stabilizing constraints and the coupling weight is fine-tuned. Per-iteration complexity under the full R-TCMF framework is <span class="inline-equation"><span class="tex">$O( {( {| {{H}^{( t )}} | + | {{G}^{( t )}} | + | {{M}^{( t )}} | + | {{N}^{( t )}} |} )k} )$</span>
+</span>, where <span class="inline-equation"><span class="tex">$| \cdot |$</span>
+</span> denotes count of non-zero entries. Our framework mitigates overfitting risks through temporal smoothness penalties, coupled factorization, and residual correction. Furthermore, we also utilize bootstrapping to enhance the robustness of our results (section 4.2) in sparse regimes.</p>
+</section>
+</section>
+<section id="sec4">
+<header>
+<div class="title-info">
+<h2>
+<span class="section-number">4</span> Experimental Evaluation</h2>
+</div>
+</header>
+<p>We conduct several experiments on FAR-Trans, the first large-scale public FAR dataset that comprises 29,090 anonymized retail investors and 806 tradable assets (321 with transaction history) over a nearly 4-year span (Jan&#x202F;2018&#x2013;Nov&#x202F;2022). The raw data includes 703,303 daily price points and 388&#x202F;049 buy or sell events (sparsity &#x2248;&#x202F;0.016&#x202F;%), recorded at daily granularity. Prior to release, the provider cleaned and aligned time series (deduplicating, imputing &#x2264;&#x202F;10-day gaps, adjusting splits and currency changes) and normalized transaction logs (ensuring buy-sell consistency, mapping out-of-range dates to nearest trading day). All customer and asset identifiers have been irreversibly anonymized to protect privacy.</p>
+<section id="sec4Z1">
+<header>
+<div class="title-info">
+<h3>
+<span class="section-number">4.1</span> Temporal Setup</h3>
+</div>
+</header>
+<p>We adopt a rolling-window evaluation methodology to simulate real-world deployment:
+<ul class="list-no-style">
+<li label="&#x2022;">Learn the model parameters using binarized user-asset interactions from the preceding three-month window<span class="inline-equation"><span class="tex">$\{ {t - 3,t - 2,t - 1} \}$</span>
+</span>, and generate rankings for all possible user-asset pairs in the subsequent month <span class="inline-equation"><span class="tex">$t$</span>
+</span> accordingly<br/></li>
+<li label="&#x2022;">Mask the interactions that have appeared in the training window before scoring the testing results to ensure recommendations represent new investment opportunities and prevent trivial performance inflation<br/></li>
+<li label="&#x2022;">Restrict evaluation to users who have at least one interaction both in the training window and in the next month to ensure fairness<br/></li>
+<li label="&#x2022;">Measure performance against actual investments during period <font style="normal">&#x0024;</font>t<font style="normal">&#x0024;</font> according to nDCG@k, mAP@k, and recall@k, compute the average scores of all active users' recommendations<br/></li>
+<li label="&#x2022;">Shift the evaluation window forward by one month and repeat the process across all available periods<br/></li>
+</ul>
+</p>
+</section>
+<section id="sec4Z2">
+<header>
+<div class="title-info">
+<h3>
+<span class="section-number">4.2</span> Baselines and Experiments</h3>
+</div>
+</header>
+<p>To demonstrate the effectiveness of our R-TCMF model, apart from the TMF, R-TMF, TCMF, popularities, and TimeSVD++ that have been mentioned in Section 3, we also include association rule mining (ARM) [<a class="bib" data-trigger="hover" data-toggle="popover" data-placement="top" href="#bib17">17</a>], item-based KNN (IB KNN) [<a class="bib" data-trigger="hover" data-toggle="popover" data-placement="top" href="#bib18">18</a>], and user-based KNN (UB KNN) [<a class="bib" data-trigger="hover" data-toggle="popover" data-placement="top" href="#bib19">19</a>] as baselines. Furthermore, to validate the effectiveness each component, we also add coupled matrix factorization (CMF), residual matrix factorization (R-MF), and residual coupled matrix factorization (R-CMF) in ablation study. We employ bootstrap sampling to ensure stable hyperparameter selection across temporal variations:
+<ul class="list-no-style">
+<li label="&#x2022;">Generate 10 bootstrap samples (with replacement) from training data<br/></li>
+<li label="&#x2022;">Perform grid search on each sample<br/></li>
+<li label="&#x2022;">Use mode for categorical parameters and mean for continuous parameters<br/></li>
+<li label="&#x2022;">Parameter ranges: learning rate is fixed at 0.00001 for all MF methods, initialization seeds: 114514 for <span class="inline-equation"><span class="tex">${U}^{( t )}$</span>
+</span>, 1919810 for <span class="inline-equation"><span class="tex">${V}^{( t )}$</span>
+</span>, 893 for <span class="inline-equation"><span class="tex">$Po{p}^{( t )}$</span>
+</span>; maximum association rule length is set to be 3; regularization <span class="inline-equation"><span class="tex">$\lambda $</span>
+</span> and <span class="inline-equation"><span class="tex">$\gamma $</span>
+</span>, and coupling weight <span class="inline-equation"><span class="tex">$\alpha $</span>
+</span>: [0.01, 0.1, 0.3, 0.5, 0.7, 1.0]; latent dimensions <span class="inline-equation"><span class="tex">$k$</span>
+</span> and neighbors: [5, 10, 15, 20, 50]; KNN similarity measures: <em>{Jaccard Similarity, Cosine Similarity}</em><br/></li>
+</ul>
+</p>
+<p>We assess recommendation quality using 3 complementary metrics and focus on the top-10 recommendations across 56 temporal splits: nDCG@10: measures ranking quality; mAP@10: assesses precision of relevant items; recall@10: quantifies coverage of actual investments.</p>
+<p>The ablation study (Table <a class="tbl" href="#tb1">1</a>) clearly illustrates the incremental benefits of each component, and their combination in R-TCMF delivers the most significant enhancement. It also shows that TimeSVD++ does not bring any positive enhancement compared to TMF, so we do not implement this on TMF and TCMF.</p>
+<div class="table-responsive" id="tb1">
+<div class="table-caption">
+<span class="table-number">Table 1.</span>
+<span class="table-title">Ablation Study Results (increments relative to MF).</span>
+</div>
+<table class="table">
+<thead>
+<tr>
+<th style="text-align:center;">Models</th>
+<th style="text-align:center;">nDCG@10(%)</th>
+<th style="text-align:center;">mAP@10(%)</th>
+<th style="text-align:center;">recall@10(%)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center;">MF</td>
+<td style="text-align:center;">25.50</td>
+<td style="text-align:center;">18.26</td>
+<td style="text-align:center;">42.48</td>
+</tr>
+<tr>
+<td style="text-align:center;">Popularity</td>
+<td style="text-align:center;">26.99 (+5.84%)</td>
+<td style="text-align:center;">19.32 (+5.81%)</td>
+<td style="text-align:center;">45.49 (+7.09%)</td>
+</tr>
+<tr>
+<td style="text-align:center;">TMF</td>
+<td style="text-align:center;">26.99 (+5.84%)</td>
+<td style="text-align:center;">19.50 (+6.79%)</td>
+<td style="text-align:center;">44.68 (+5.18%)</td>
+</tr>
+<tr>
+<td style="text-align:center;">CMF</td>
+<td style="text-align:center;">24.29 (-4.75%)</td>
+<td style="text-align:center;">16.34 (-10.51%)</td>
+<td style="text-align:center;">44.00 (+3.58%)</td>
+</tr>
+<tr>
+<td style="text-align:center;">R-MF</td>
+<td style="text-align:center;">27.88 (+9.33%)</td>
+<td style="text-align:center;">20.18 (+10.51%)</td>
+<td style="text-align:center;">46.03 (+8.36%)</td>
+</tr>
+<tr>
+<td style="text-align:center;">TimeSVD++</td>
+<td style="text-align:center;">24.40 (-4.31%)</td>
+<td style="text-align:center;">16.84 (-7.78%)</td>
+<td style="text-align:center;">43.21 (+1.72%)</td>
+</tr>
+<tr>
+<td style="text-align:center;">TCMF</td>
+<td style="text-align:center;">28.48 (+11.69%)</td>
+<td style="text-align:center;">20.97 (+14.84%)</td>
+<td style="text-align:center;">46.00 (+8.29%)</td>
+</tr>
+<tr>
+<td style="text-align:center;">R-TMF</td>
+<td style="text-align:center;">28.74 (+12.71%)</td>
+<td style="text-align:center;">21.11 (+15.61%)</td>
+<td style="text-align:center;">46.70 (+9.93%)</td>
+</tr>
+<tr>
+<td style="text-align:center;">R-CMF</td>
+<td style="text-align:center;">26.63 (+4.43%)</td>
+<td style="text-align:center;">18.44 (+0.99%)</td>
+<td style="text-align:center;">46.87 (+10.33%)</td>
+</tr>
+<tr>
+<td style="text-align:center;"><strong>R-TCMF</strong></td>
+<td style="text-align:center;"><strong>30.04 (+17.80%)</strong></td>
+<td style="text-align:center;"><strong>22.37 (+22.51%)</strong></td>
+<td style="text-align:center;"><strong>47.94 (+12.85%)</strong></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The statistical significance (Table <a class="tbl" href="#tb2">2</a>) of these improvements is confirmed through block bootstrap testing with block length 5 and 10000 replications, where R-TCMF significantly outperforms traditional methods with p-values consistently below 0.05.</p>
+<div class="table-responsive" id="tb2">
+<div class="table-caption">
+<span class="table-number">Table 2.</span>
+<span class="table-title">Statistical Significance Testing.</span>
+</div>
+<table class="table">
+<thead>
+<tr>
+<th style="text-align:center;">Models</th>
+<th style="text-align:center;">nDCG@10(%)</th>
+<th style="text-align:center;">mAP@10(%)</th>
+<th style="text-align:center;">recall@10(%)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center;">ARM</td>
+<td style="text-align:center;">4.05 (p &lt; 0.001)</td>
+<td style="text-align:center;">2.09 (p &lt; 0.001)</td>
+<td style="text-align:center;">8.98 (p &lt; 0.001)</td>
+</tr>
+<tr>
+<td style="text-align:center;">UB KNN</td>
+<td style="text-align:center;">23.25 (p = 0.004)</td>
+<td style="text-align:center;">17.26 (p = 0.011)</td>
+<td style="text-align:center;">36.02 (p &lt; 0.001)</td>
+</tr>
+<tr>
+<td style="text-align:center;">IB KNN</td>
+<td style="text-align:center;">22.80 (p = 0.003)</td>
+<td style="text-align:center;">16.52 (p = 0.005)</td>
+<td style="text-align:center;">44.68 (p = 0.003)</td>
+</tr>
+<tr>
+<td style="text-align:center;"><strong>R-TCMF</strong></td>
+<td style="text-align:center;"><strong>30.04</strong></td>
+<td style="text-align:center;"><strong>22.37</strong></td>
+<td style="text-align:center;"><strong>47.94</strong></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+</section>
+<section id="sec5">
+<header>
+<div class="title-info">
+<h2>
+<span class="section-number">5</span> Conclusions and Future Works</h2>
+</div>
+</header>
+<p>This study introduces and evaluates R-TCMF framework for financial asset recommendation using the Far-Trans dataset. Key findings demonstrate that R-TCMF significantly outperforms both traditional collaborative filtering methods and TMF variants. The integration of temporal coupling penalties, nPMI-based item co-occurrence modeling, and residual factorization proved highly effective in addressing the core challenges of financial recommendation: evolving investor sentiment and market conditions, sparse interactions, and strong popularity bias. Our rigorous evaluation methodology employed bootstrap sampling for stable hyperparameter selection across temporal variations and block bootstrap testing to establish statistical significance, ensuring the reliability and robustness of our performance improvements. Despite these contributions, our work relies exclusively on a single dataset. Moreover, our approach focuses solely on modeling user preferences without incorporating crucial financial considerations such as portfolio profitability and risk management. Future research should address these limitations through validating across multiple datasets from diverse geographic and regulatory contexts, and integrating financial objectives beyond user preference modeling to better serve the complex needs of financial advisors and individual investors.</p>
+</section>
+</section>
+<section class="back-matter">
+<section id="bib-sec-001">
+<header>
+<div class="title-info">
+<h2 class="page-brake-head">References</h2>
+</div>
+</header>
+<ul class="bibUl">
+<li id="bib1" label="[1]">Philipp Gomber, Jascha-Alexander Koch, and Michael Siering. 2017. Digital Finance and FinTech: current research and future research directions. Journal of Business Economics 87 (2017), 537&#x2013;580. <a class="link-inline force-break" href="https://doi.org/10.1007/s11573-017-0852-x">https://doi.org/10.1007/s11573-017-0852-x</a>.</li>
+<li id="bib2" label="[2]">Asefeh Asemi, Adeleh Asemi, and Andrea Ko. 2024. A model for investment type recommender system based on the potential investors&#x2019; preferences and experts&#x2019; feedback using ANFIS and MNN. Journal of Big Data 11 (2024), Article 128. <a class="link-inline force-break" href="https://doi.org/10.1186/s40537-024-00965-y">https://doi.org/10.1186/s40537-024-00965-y</a>.</li>
+<li id="bib3" label="[3]">Yehuda Koren. 2009. Collaborative filtering with temporal dynamics. In Proceedings of the 15th ACM SIGKDD International Conference on Knowledge Discovery and Data Mining (KDD &#x2019;09), Paris, France, June 28&#x2013;July 1, 2009. ACM, New York, NY, USA, 447&#x2013;456. <a class="link-inline force-break" href="https://doi.org/10.1145/1557019.1557072">https://doi.org/10.1145/1557019.1557072</a>.</li>
+<li id="bib4" label="[4]">Hsiang-Fu Yu, Nikhil Rao, and Inderjit S. Dhillon. 2016. Temporal regularized matrix factorization for high-dimensional time series prediction. In Advances in Neural Information Processing Systems 29 (NIPS &#x2019;16), 847&#x2013;855. Curran Associates, Inc., Red Hook, NY, USA.</li>
+<li id="bib5" label="[5]">Reyes Michaela Denise Gonzales and Carol Anne Hargreaves. 2022. How can we use artificial intelligence for stock recommendation and risk management? A proposed decision support system. International Journal of Information Management Data Insights 2, 2 (2022), Article 100130. <a class="link-inline force-break" href="https://doi.org/10.1016/j.jjimei.2022.100130">https://doi.org/10.1016/j.jjimei.2022.100130</a>.</li>
+<li id="bib6" label="[6]">Hamidreza Tahmasbi, Mehrdad Jalali, and Hassan Shakeri. 2021. TSCMF: Temporal and social collective matrix factorization model for recommender systems. Journal of Intelligent Information Systems 56 (2021), 169&#x2013;187. <a class="link-inline force-break" href="https://doi.org/10.1007/s10844-020-00613-w">https://doi.org/10.1007/s10844-020-00613-w</a>.</li>
+<li id="bib7" label="[7]">Anastasiia Klimashevskaia, Dietmar Jannach, Mehdi Elahi, and Christoph Trattner. 2024. A survey on popularity bias in recommender systems. User Modeling and User-Adapted Interaction 34 (2024), 1777&#x2013;1834. <a class="link-inline force-break" href="https://doi.org/10.1007/s11257-024-09406-0">https://doi.org/10.1007/s11257-024-09406-0</a>.</li>
+<li id="bib8" label="[8]">Filippo Carnovalini, Antonio Rod&#x00E0;, and Geraint A. Wiggins. 2025. Popularity bias in recommender systems: The search for fairness in the long tail. Information 16, 2 (2025), 151. <a class="link-inline force-break" href="https://doi.org/10.3390/info16020151">https://doi.org/10.3390/info16020151</a>.</li>
+<li id="bib9" label="[9]">Juan Sanz-Cruzado, Nikos Droukas, and Ross McCreadie. 2024. FAR-Trans: An investment dataset for financial asset recommendation. *arXiv:*2407.08692. Retrieved from <a class="link-inline force-break" href="https://arxiv.org/abs/2407.08692">https://arxiv.org/abs/2407.08692</a>.</li>
+<li id="bib10" label="[10]">Baptiste Barreau and Laurent Carlier. 2020. History-augmented collaborative filtering for financial recommendations. In Proceedings of the 14th ACM Conference on Recommender Systems (RecSys &#x2019;20), Virtual Event, Brazil, Sept. 2020. ACM, New York, NY, USA, 492&#x2013;497. <a class="link-inline force-break" href="https://doi.org/10.1145/3383313.3412206">https://doi.org/10.1145/3383313.3412206</a>.</li>
+<li id="bib11" label="[11]">Ashraf Ghiye, Baptiste Barreau, Laurent Carlier, and Michalis Vazirgiannis. 2023. Adaptive collaborative filtering with personalized time decay functions for financial product recommendation. In Proceedings of the 17th ACM Conference on Recommender Systems (RecSys &#x2019;23). ACM, New York, NY, USA, 798&#x2013;804. <a class="link-inline force-break" href="https://doi.org/10.1145/3604915.3608832">https://doi.org/10.1145/3604915.3608832</a>.</li>
+<li id="bib12" label="[12]">Prasad Bhavana and Vineet Padmanabhan. 2025. Temporal matrix factorization: A polynomial approach to latent factor estimation. Pattern Recognition 157 (2025), 110905. <a class="link-inline force-break" href="https://doi.org/10.1016/j.patcog.2024.110905">https://doi.org/10.1016/j.patcog.2024.110905</a>.</li>
+<li id="bib13" label="[13]">Y. Zheng, X. Liu, S. Hsu, and B. Shi. 2020. Learning-to-rank based financial asset selection using deep neural networks. In Proceedings of the 29th ACM International Conference on Information and Knowledge Management (CIKM &#x2019;20). ACM, New York, NY, USA, 2345&#x2013;2354.</li>
+<li id="bib14" label="[14]">Gerlof Bouma. 2009. Normalized (pointwise) mutual information in collocation extraction. In Proceedings of the Biennial GSCL Conference 2009, 31&#x2013;40.</li>
+<li id="bib15" label="[15]">Cynthia Pagliaro, Dhagash Mehta, Han-Tai Shiao, Shaofei Wang, and Luwei Xiong. 2021. Investor behavior modeling by analyzing financial advisor notes: A machine learning perspective. *arXiv:*2107.05592. Retrieved from <a class="link-inline force-break" href="https://arxiv.org/abs/2107.05592">https://arxiv.org/abs/2107.05592</a>.</li>
+<li id="bib16" label="[16]">Mehdi Elahi, Danial Khosh Kholgh, Mohammad Sina Kiarostami, Sorush Saghari, Shiva Parsa Rad, and Marko Tkal&#x010D;i&#x010D;. 2021. Investigating the impact of recommender systems on user-based and item-based popularity bias. Information Processing &amp; Management 58, 5 (2021), 102655. <a class="link-inline force-break" href="https://doi.org/10.1016/j.ipm.2021.102655">https://doi.org/10.1016/j.ipm.2021.102655</a>.</li>
+<li id="bib17" label="[17]">Rakesh Agrawal and Ramakrishnan Srikant. 1994. Fast algorithms for mining association rules in large databases. In Proceedings of the 20th International Conference on Very Large Data Bases (VLDB &#x2019;94), Santiago, Chile, September 12&#x2013;15, 1994. Morgan Kaufmann, San Francisco, CA, USA, 487&#x2013;499.</li>
+<li id="bib18" label="[18]">Badrul Sarwar, George Karypis, Joseph A. Konstan, and John Riedl. 2001. Item-based collaborative filtering recommendation algorithms. In Proceedings of the 10th International Conference on World Wide Web (WWW &#x2019;01), Hong Kong, May 1&#x2013;5, 2001. ACM, New York, NY, USA, 285&#x2013;295. <a class="link-inline force-break" href="https://doi.org/10.1145/371920.372071">https://doi.org/10.1145/371920.372071</a>.</li>
+<li id="bib19" label="[19]">Jonathan L. Herlocker, Joseph A. Konstan, Al Borchers, and John Riedl. 1999. An algorithmic framework for performing collaborative filtering. In Proceedings of the 22nd ACM International Conference on Research and Development in Information Retrieval (SIGIR &#x2019;99), Berkeley, CA, USA, August 15&#x2013;19, 1999. ACM, New York, NY, USA, 230&#x2013;237. <a class="link-inline force-break" href="https://doi.org/10.1145/312624.312682">https://doi.org/10.1145/312624.312682</a>.</li>
+</ul>
+</section>
+</section>
+<section id="foot-001" class="footnote">
+<header>
+<div class="title-info">
+<h2>Footnote</h2>
+</div>
+</header>
+<p id="afn1">
+<a href="#foot-afn1"><sup>&#x2217;</sup></a>Corresponding author.</p>
+<div class="bibStrip">
+<p>
+<img src="https://www.acm.org/binaries/content/gallery/acm/publications/cc-by/cc-by.jpg"
+                       class="img-responsive"
+                       alt="CC-BY license image"/>
+<br/> This work is licensed under a <a href="https://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution International 4.0 License</a>.</p>
+<p><em>AIDF 2025, Chengdu, China</em></p>
+<p>&#x00A9; 2025 Copyright held by the owner/author(s).<br/> ACM ISBN 979-8-4007-1495-5/2025/06<br/>DOI: <a class="link-inline force-break" target="_blank" href="https://doi.org/10.1145/3764727.3764747">https://doi.org/10.1145/3764727.3764747</a>
+</p>
+</div>
+</section>
+</main>
+</body>
+</html>
